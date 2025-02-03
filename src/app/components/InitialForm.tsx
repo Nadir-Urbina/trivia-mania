@@ -37,6 +37,8 @@ export default function InitialForm({ onSubmit }: InitialFormProps) {
             <input
               type="text"
               className="w-full p-2 border rounded-lg"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
               required
             />
           </div>
@@ -45,11 +47,18 @@ export default function InitialForm({ onSubmit }: InitialFormProps) {
             <input
               type="email"
               className="w-full p-2 border rounded-lg"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
           <div className="flex items-center space-x-2">
-            <input type="checkbox" required />
+            <input 
+              type="checkbox" 
+              checked={acknowledged}
+              onChange={(e) => setAcknowledged(e.target.checked)}
+              required 
+            />
             <label className="text-sm text-primary">
               I acknowledge that I'll receive information about ATS Products and Services
             </label>
