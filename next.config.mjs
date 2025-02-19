@@ -12,7 +12,7 @@ try {
 }
 
 /** @type {import('next').NextConfig} */
-const nextConfig = {
+const config = {
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -21,6 +21,12 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'cdn.sanity.io',
+      },
+    ],
   },
   experimental: {
     webpackBuildWorker: true,
@@ -36,7 +42,7 @@ const nextConfig = {
   },
 }
 
-mergeConfig(nextConfig, userConfig)
+mergeConfig(config, userConfig)
 
 function mergeConfig(nextConfig, userConfig) {
   if (!userConfig) {
@@ -58,4 +64,4 @@ function mergeConfig(nextConfig, userConfig) {
   }
 }
 
-export default nextConfig
+export default config
