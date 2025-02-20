@@ -41,22 +41,14 @@ export default defineType({
       name: 'correctAnswer',
       title: 'Correct Answer',
       type: 'string',
-      hidden: ({ document }) => document?.type === 'boolean',
-      validation: (Rule) => Rule.custom((correctAnswer, context) => {
-        if (context.document?.type === 'multipleChoice') {
-          const answers = (context.document?.answers || []) as string[]
-          return answers.includes(correctAnswer || '') 
-            ? true 
-            : 'Correct answer must be one of the provided options'
-        }
-        return true
-      })
-    }),
-    defineField({
-      name: 'correctBooleanAnswer',
-      title: 'Correct Answer',
-      type: 'boolean',
-      hidden: ({ document }) => document?.type !== 'boolean'
+      options: {
+        list: [
+          { title: 'True', value: 'true' },
+          { title: 'False', value: 'false' }
+        ]
+      },
+      validation: rule => rule.required(),
+      hidden: ({ parent }) => parent?.type !== 'boolean'
     }),
     defineField({
       name: 'acceptableAnswers',

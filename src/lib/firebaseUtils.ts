@@ -100,4 +100,21 @@ export const getLeaderboard = async (daily: boolean = true) => {
     console.error('Error fetching leaderboard:', error);
     throw error;
   }
+};
+
+export const getAllPlayersData = async () => {
+  try {
+    const querySnapshot = await getDocs(collection(db, 'players'));
+    return querySnapshot.docs.map(doc => ({
+      fullName: doc.data().fullName,
+      email: doc.data().email,
+      companyName: doc.data().companyName,
+      role: doc.data().role,
+      lastPlayedAt: doc.data().lastPlayedAt?.toDate(),
+      id: doc.id,
+    }));
+  } catch (error) {
+    console.error('Error fetching players data:', error);
+    throw error;
+  }
 }; 

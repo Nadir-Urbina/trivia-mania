@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion } from "framer-motion"
 import { getLeaderboard } from '@/lib/firebaseUtils'
 import { format } from 'date-fns'
+import DownloadPlayersData from './DownloadPlayersData'
 
 interface LeaderboardEntry {
   id: string
@@ -54,12 +55,15 @@ export default function Leaderboard({ initialIsDaily = false }) {
     <div className="p-6 bg-white rounded-lg shadow-lg">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-primary">Leaderboard</h2>
-        <button
-          onClick={() => setIsDaily(!isDaily)}
-          className="bg-primary-accent text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
-        >
-          {isDaily ? "Show All Time" : "Show Daily"}
-        </button>
+        <div className="flex gap-4">
+          <button
+            onClick={() => setIsDaily(!isDaily)}
+            className="bg-primary-accent text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
+          >
+            {isDaily ? "Show All Time" : "Show Daily"}
+          </button>
+          <DownloadPlayersData />
+        </div>
       </div>
 
       {isLoading ? (

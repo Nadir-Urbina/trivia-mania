@@ -64,7 +64,7 @@ export default function TriviaMania({ playerData, onGameComplete }: TriviaManiaP
       case 'multipleChoice':
         return answer === question.correctAnswer
       case 'boolean':
-        return answer === question.correctAnswer
+        return String(answer).toLowerCase() === String(question.correctAnswer).toLowerCase()
       case 'text':
         const userAnswer = String(answer).toLowerCase().trim()
         const correctAnswer = question.correctAnswer.toLowerCase()
@@ -79,6 +79,15 @@ export default function TriviaMania({ playerData, onGameComplete }: TriviaManiaP
     const currentQuestion = gameQuestions[currentQuestionIndex]
     const isCorrect = validateAnswer(currentQuestion, answer)
     
+    console.log({
+      questionNumber: currentQuestionIndex + 1,
+      question: currentQuestion.question,
+      userAnswer: answer,
+      correctAnswer: currentQuestion.correctAnswer,
+      isCorrect: isCorrect,
+      type: currentQuestion.type
+    })
+
     if (isCorrect) setScore(score + 1)
 
     if (currentQuestionIndex < gameQuestions.length - 1) {
