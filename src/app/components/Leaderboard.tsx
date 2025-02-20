@@ -8,6 +8,7 @@ import { format } from 'date-fns'
 interface LeaderboardEntry {
   id: string
   playerName: string
+  companyName: string
   score: number
   timeInSeconds: number
   playedAt: Date
@@ -76,6 +77,7 @@ export default function Leaderboard({ initialIsDaily = false }) {
                 <span className="text-xl font-bold text-primary-accent">{index + 1}</span>
                 <div>
                   <p className="font-semibold text-primary">{result.playerName}</p>
+                  <p className="text-sm text-gray-500">{result.companyName}</p>
                   <p className="text-sm text-gray-500">Score: {result.score}</p>
                   <p className="text-xs text-gray-400">
                     {format(result.playedAt.toDate(), 'MMM d, yyyy - h:mm a')}

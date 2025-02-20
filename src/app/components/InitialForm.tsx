@@ -9,18 +9,25 @@ import { Label } from "@/components/ui/label"
 import Link from "next/link"
 
 interface InitialFormProps {
-  onSubmit: (formData: { fullName: string; email: string }) => void
+  onSubmit: (formData: {
+    fullName: string
+    email: string
+    companyName: string
+    role: string
+  }) => void
 }
 
 export default function InitialForm({ onSubmit }: InitialFormProps) {
   const [fullName, setFullName] = useState("")
   const [email, setEmail] = useState("")
+  const [companyName, setCompanyName] = useState("")
+  const [role, setRole] = useState("")
   const [acknowledged, setAcknowledged] = useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (fullName && email && acknowledged) {
-      onSubmit({ fullName, email })
+    if (fullName && email && companyName && role && acknowledged) {
+      onSubmit({ fullName, email, companyName, role })
     }
   }
 
@@ -42,6 +49,29 @@ export default function InitialForm({ onSubmit }: InitialFormProps) {
               required
             />
           </div>
+          
+          <div>
+            <label className="block text-primary mb-2">Company Name</label>
+            <input
+              type="text"
+              className="w-full p-2 border rounded-lg"
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
+              required
+            />
+          </div>
+          
+          <div>
+            <label className="block text-primary mb-2">Role</label>
+            <input
+              type="text"
+              className="w-full p-2 border rounded-lg"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              required
+            />
+          </div>
+
           <div>
             <label className="block text-primary mb-2">Company Email</label>
             <input
@@ -52,6 +82,7 @@ export default function InitialForm({ onSubmit }: InitialFormProps) {
               required
             />
           </div>
+
           <div className="flex items-center space-x-2">
             <input 
               type="checkbox" 
@@ -63,6 +94,7 @@ export default function InitialForm({ onSubmit }: InitialFormProps) {
               I acknowledge that I'll receive information about ATS Products and Services
             </label>
           </div>
+
           <button 
             type="submit"
             className="w-full bg-primary-accent text-white py-2 rounded-lg hover:opacity-90 transition-opacity"

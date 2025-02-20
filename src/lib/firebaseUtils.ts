@@ -1,6 +1,28 @@
 import { db } from './firebase';
 import { collection, addDoc, query, where, getDocs, orderBy, limit, Timestamp } from 'firebase/firestore';
-import { PlayerData, GameResult, LeaderboardEntry } from '../types';
+
+export interface PlayerData {
+  fullName: string;
+  email: string;
+  companyName: string;
+  role: string;
+}
+
+export interface GameResult {
+  playerName: string;
+  companyName: string;
+  score: number;
+  timeInSeconds: number;
+}
+
+export interface LeaderboardEntry {
+  id: string;
+  playerName: string;
+  companyName: string;
+  score: number;
+  timeInSeconds: number;
+  playedAt: Date;
+}
 
 export const savePlayerData = async (playerData: PlayerData) => {
   try {
@@ -68,6 +90,7 @@ export const getLeaderboard = async (daily: boolean = true) => {
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
       playerName: doc.data().playerName,
+      companyName: doc.data().companyName,
       score: doc.data().score,
       timeInSeconds: doc.data().timeInSeconds,
       playedAt: doc.data().playedAt.toDate(),

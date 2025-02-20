@@ -9,14 +9,25 @@ import { savePlayerData, saveGameResult } from "@/lib/firebaseUtils"
 
 export default function Home() {
   const [gameStarted, setGameStarted] = useState(false)
-  const [playerData, setPlayerData] = useState<{ fullName: string; email: string } | null>(null)
+  const [playerData, setPlayerData] = useState<{
+    fullName: string;
+    email: string;
+    companyName: string;
+    role: string;
+  } | null>(null)
 
-  const handleStartGame = async (data: { fullName: string; email: string }) => {
+  const handleStartGame = async (data: { 
+    fullName: string; 
+    email: string; 
+    companyName: string; 
+    role: string;
+  }) => {
     try {
-      // Save player data to Firebase
       await savePlayerData({
         fullName: data.fullName,
         email: data.email,
+        companyName: data.companyName,
+        role: data.role,
         acknowledgeMarketing: true,
       })
       
@@ -24,7 +35,6 @@ export default function Home() {
       setGameStarted(true)
     } catch (error) {
       console.error("Error saving player data:", error)
-      // You might want to show an error message to the user
     }
   }
 
@@ -32,13 +42,11 @@ export default function Home() {
     if (!playerData) return
 
     try {
-      // Save game result to Firebase
       await saveGameResult({
         playerName: playerData.fullName,
-        playerEmail: playerData.email,
+        companyName: playerData.companyName,
         score,
-        timeInSeconds,
-        playedAt: new Date()
+        timeInSeconds
       })
     } catch (error) {
       console.error("Error saving game result:", error)

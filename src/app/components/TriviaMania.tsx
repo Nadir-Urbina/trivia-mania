@@ -13,6 +13,8 @@ interface TriviaManiaProp {
   playerData: {
     fullName: string
     email: string
+    companyName: string
+    role: string
   }
   onGameComplete: (score: number, timeInSeconds: number) => void
 }
