@@ -1,12 +1,13 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import Question from "./Question"
 import Results from "./Results"
 import Timer from "./Timer"
 import { shuffleArray } from "../utils/shuffleArray"
-import { questions as allQuestions } from "../data/questions"
+import { getQuestions } from "@/sanity/lib/client"
+import { Question as SanityQuestion } from "@/sanity/types/question"
 
 interface TriviaManiaProp {
   playerData: {
@@ -19,21 +20,28 @@ interface TriviaManiaProp {
 const QUESTIONS_PER_GAME = 7
 
 export default function TriviaMania({ playerData, onGameComplete }: TriviaManiaProp) {
-  const [gameQuestions, setGameQuestions] = useState<typeof allQuestions>([])
+  const [gameQuestions, setGameQuestions] = useState<SanityQuestion[]>([])
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [score, setScore] = useState(0)
   const [gameOver, setGameOver] = useState(false)
   const [isTimerRunning, setIsTimerRunning] = useState(true)
   const [totalTime, setTotalTime] = useState(0)
-
-  const selectRandomQuestions = useCallback(() => {
-    const shuffled = shuffleArray([...allQuestions])
-    return shuffled.slice(0, QUESTIONS_PER_GAME)
-  }, [])
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    setGameQuestions(selectRandomQuestions())
-  }, [selectRandomQuestions])
+    async function fetchQuestions() {
+      try {
+        const allQuestions = await getQuestions()
+        const shuffled = shuffleArray([...allQuestions])
+        setGameQuestions(shuffled.slice(0, QUESTIONS_PER_GAME))
+      } catch (error) {
+        console.error("Error fetching questions:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchQuestions()
+  }, [])
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null
@@ -42,8 +50,6 @@ export default function TriviaMania({ playerData, onGameComplete }: TriviaManiaP
       interval = setInterval(() => {
         setTotalTime((prevTime) => prevTime + 1)
       }, 1000)
-    } else if (interval) {
-      clearInterval(interval)
     }
 
     return () => {
@@ -51,7 +57,26 @@ export default function TriviaMania({ playerData, onGameComplete }: TriviaManiaP
     }
   }, [isTimerRunning])
 
-  const handleAnswer = (isCorrect: boolean) => {
+  const validateAnswer = (question: SanityQuestion, answer: string | boolean): boolean => {
+    switch (question.type) {
+      case 'multipleChoice':
+        return answer === question.correctAnswer
+      case 'boolean':
+        return answer === question.correctAnswer
+      case 'text':
+        const userAnswer = String(answer).toLowerCase().trim()
+        const correctAnswer = question.correctAnswer.toLowerCase()
+        const acceptableAnswers = question.acceptableAnswers?.map(a => a.toLowerCase()) || []
+        return userAnswer === correctAnswer || acceptableAnswers.includes(userAnswer)
+      default:
+        return false
+    }
+  }
+
+  const handleAnswer = (answer: string | boolean) => {
+    const currentQuestion = gameQuestions[currentQuestionIndex]
+    const isCorrect = validateAnswer(currentQuestion, answer)
+    
     if (isCorrect) setScore(score + 1)
 
     if (currentQuestionIndex < gameQuestions.length - 1) {
@@ -63,16 +88,26 @@ export default function TriviaMania({ playerData, onGameComplete }: TriviaManiaP
     }
   }
 
-  const restartGame = () => {
-    setGameQuestions(selectRandomQuestions())
-    setCurrentQuestionIndex(0)
-    setScore(0)
-    setGameOver(false)
-    setTotalTime(0)
-    setIsTimerRunning(true)
+  const restartGame = async () => {
+    setIsLoading(true)
+    try {
+      const allQuestions = await getQuestions()
+      const shuffled = shuffleArray([...allQuestions])
+      setGameQuestions(shuffled.slice(0, QUESTIONS_PER_GAME))
+      setCurrentQuestionIndex(0)
+      setScore(0)
+      setGameOver(false)
+      setTotalTime(0)
+      setIsTimerRunning(true)
+    } catch (error) {
+      console.error("Error restarting game:", error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  if (gameQuestions.length === 0) return <div>Loading...</div>
+  if (isLoading) return <div>Loading questions...</div>
+  if (gameQuestions.length === 0) return <div>No questions available</div>
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">

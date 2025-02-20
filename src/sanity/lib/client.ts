@@ -1,5 +1,6 @@
 import { createClient } from 'next-sanity'
 import { apiVersion, dataset, projectId, useCdn } from '../env'
+import { Question } from '../types/question'
 
 export const client = createClient({
   apiVersion,
