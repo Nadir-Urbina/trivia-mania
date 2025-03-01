@@ -1,5 +1,5 @@
 import { db } from './firebase';
-import { collection, addDoc, query, where, getDocs, orderBy, limit, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, orderBy, limit, Timestamp, serverTimestamp } from 'firebase/firestore';
 
 export interface PlayerData {
   fullName: string;
@@ -36,12 +36,28 @@ export const savePlayerData = async (playerData: PlayerData) => {
   }
 };
 
-export const saveGameResult = async (result: GameResult) => {
+export const saveGameResult = async (data: {
+  playerName: string;
+  companyName: string;
+  score: number;
+  timeInSeconds: number;
+  archived?: boolean;
+}) => {
   try {
-    await addDoc(collection(db, 'gameResults'), {
-      ...result,
-      playedAt: Timestamp.now()
+    console.log('Saving game result:', data);
+    
+    const gameResultRef = collection(db, 'gameResults');
+    const docRef = await addDoc(gameResultRef, {
+      playerName: data.playerName,
+      companyName: data.companyName,
+      score: data.score,
+      timeInSeconds: data.timeInSeconds,
+      playedAt: serverTimestamp(),
+      archived: false // Always set to false for new entries
     });
+    
+    console.log('Game result saved with ID:', docRef.id);
+    return docRef.id;
   } catch (error) {
     console.error('Error saving game result:', error);
     throw error;
@@ -70,35 +86,59 @@ export const canPlayerPlay = async (email: string): Promise<boolean> => {
 
 export const getLeaderboard = async (daily: boolean = true) => {
   try {
-    let constraints = [];
+    console.log('Getting leaderboard, daily mode:', daily);
     
+    // Create a reference to the gameResults collection
+    const gameResultsRef = collection(db, 'gameResults');
+    
+    // Simplify the query to just filter by archived status
+    const q = query(
+      gameResultsRef,
+      where('archived', '==', false),
+      orderBy('score', 'desc'),
+      limit(20)
+    );
+    
+    console.log('Executing Firestore query...');
+    const querySnapshot = await getDocs(q);
+    console.log(`Found ${querySnapshot.size} records for leaderboard`);
+    
+    // Get all documents
+    let results = querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        playerName: data.playerName,
+        companyName: data.companyName,
+        score: data.score,
+        timeInSeconds: data.timeInSeconds,
+        playedAt: data.playedAt?.toDate(),
+        archived: data.archived
+      };
+    });
+    
+    // If daily mode, filter in memory instead of in the query
     if (daily) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      constraints.push(where('playedAt', '>=', today));
+      
+      results = results.filter(item => {
+        return item.playedAt && item.playedAt >= today;
+      });
     }
-
-    const q = query(
-      collection(db, 'gameResults'),
-      ...constraints,
-      orderBy('score', 'desc'),
-      orderBy('timeInSeconds', 'asc'),
-      limit(10)
-    );
-
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      playerName: doc.data().playerName,
-      companyName: doc.data().companyName,
-      score: doc.data().score,
-      timeInSeconds: doc.data().timeInSeconds,
-      playedAt: doc.data().playedAt.toDate(),
-      ...doc.data()
-    })) as LeaderboardEntry[];
+    
+    // Sort by score and time
+    results.sort((a, b) => {
+      if (b.score !== a.score) {
+        return b.score - a.score;
+      }
+      return a.timeInSeconds - b.timeInSeconds;
+    });
+    
+    return results;
   } catch (error) {
     console.error('Error fetching leaderboard:', error);
-    throw error;
+    return [];
   }
 };
 
@@ -117,4 +157,22 @@ export const getAllPlayersData = async () => {
     console.error('Error fetching players data:', error);
     throw error;
   }
-}; 
+};
+
+export async function getArchivedPlayersData() {
+  try {
+    const q = query(
+      collection(db, 'gameResults'),
+      where('archived', '==', true),
+      orderBy('archivedAt', 'desc')
+    )
+    const querySnapshot = await getDocs(q)
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }))
+  } catch (error) {
+    console.error('Error fetching archived players data:', error)
+    return []
+  }
+} 

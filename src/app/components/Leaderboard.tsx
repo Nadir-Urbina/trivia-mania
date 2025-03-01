@@ -1,10 +1,11 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from "framer-motion"
 import { getLeaderboard } from '@/lib/firebaseUtils'
 import { format } from 'date-fns'
 import DownloadPlayersData from './DownloadPlayersData'
+import ClearPlayersData from './ClearPlayersData'
 
 interface LeaderboardEntry {
   id: string
@@ -13,21 +14,23 @@ interface LeaderboardEntry {
   score: number
   timeInSeconds: number
   playedAt: Date
+  archived?: boolean
 }
 
 export default function Leaderboard({ initialIsDaily = false }) {
   const [results, setResults] = useState<LeaderboardEntry[]>([])
   const [isDaily, setIsDaily] = useState(initialIsDaily)
   const [isLoading, setIsLoading] = useState(true)
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
 
-  useEffect(() => {
-    loadLeaderboard()
-  }, [isDaily])
-
-  const loadLeaderboard = async () => {
+  // Use useCallback to memoize the loadLeaderboard function
+  const loadLeaderboard = useCallback(async () => {
     try {
       setIsLoading(true)
+      console.log('Loading leaderboard data, daily mode:', isDaily)
       const data = await getLeaderboard(isDaily)
+      console.log('Leaderboard data loaded, count:', data.length, data)
+      
       // Sort by score (descending) and then by time (ascending)
       const sortedData = data.sort((a, b) => {
         // First compare scores
@@ -37,13 +40,24 @@ export default function Leaderboard({ initialIsDaily = false }) {
         // If scores are equal, compare times
         return a.timeInSeconds - b.timeInSeconds
       })
+      
       setResults(sortedData)
     } catch (error) {
       console.error('Error loading leaderboard:', error)
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [isDaily])
+
+  // Trigger a refresh
+  const handleRefresh = useCallback(() => {
+    console.log('Refreshing leaderboard...')
+    setRefreshTrigger(prev => prev + 1)
+  }, [])
+
+  useEffect(() => {
+    loadLeaderboard()
+  }, [loadLeaderboard, refreshTrigger])
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
@@ -63,6 +77,7 @@ export default function Leaderboard({ initialIsDaily = false }) {
             {isDaily ? "Show All Time" : "Show Daily"}
           </button>
           <DownloadPlayersData />
+          <ClearPlayersData archiveMode={true} onDataCleared={handleRefresh} />
         </div>
       </div>
 
@@ -84,7 +99,7 @@ export default function Leaderboard({ initialIsDaily = false }) {
                   <p className="text-sm text-gray-500">{result.companyName}</p>
                   <p className="text-sm text-gray-500">Score: {result.score}</p>
                   <p className="text-xs text-gray-400">
-                    {format(result.playedAt.toDate(), 'MMM d, yyyy - h:mm a')}
+                    {format(result.playedAt, 'MMM d, yyyy - h:mm a')}
                   </p>
                 </div>
               </div>

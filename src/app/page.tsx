@@ -46,7 +46,8 @@ export default function Home() {
         playerName: playerData.fullName,
         companyName: playerData.companyName,
         score,
-        timeInSeconds
+        timeInSeconds,
+        archived: false
       })
     } catch (error) {
       console.error("Error saving game result:", error)
