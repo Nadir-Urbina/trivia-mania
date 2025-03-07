@@ -1,6 +1,8 @@
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Question as SanityQuestion } from "@/sanity/types/question"
+import { cn } from "@/lib/utils" // Assuming you have a utility function for class names
+import { useEffect } from "react"
 
 interface QuestionProps {
   question: SanityQuestion
@@ -10,25 +12,72 @@ interface QuestionProps {
 }
 
 export default function Question({ question, onAnswer, questionNumber, totalQuestions }: QuestionProps) {
+  // Add a style tag to the document to override any global hover styles
+  useEffect(() => {
+    const styleElement = document.createElement('style');
+    styleElement.innerHTML = `
+      .no-hover-effect {
+        -webkit-tap-highlight-color: transparent !important;
+        outline: none !important;
+      }
+      .no-hover-effect:hover, 
+      .no-hover-effect:focus, 
+      .no-hover-effect:active {
+        background-color: white !important;
+        color: #1f2937 !important;
+        border-color: #d1d5db !important;
+        outline: none !important;
+        box-shadow: none !important;
+      }
+    `;
+    document.head.appendChild(styleElement);
+    
+    return () => {
+      document.head.removeChild(styleElement);
+    };
+  }, []);
+
   const renderAnswers = () => {
     switch (question.type) {
       case 'multipleChoice':
         return question.answers.map((answer, index) => (
-          <Button
+          <button
             key={index}
             onClick={() => onAnswer(answer)}
-            className="w-full p-4 mb-2 text-center bg-white border border-gray-300 rounded-lg text-gray-800"
+            className="no-hover-effect w-full p-4 mb-2 text-center border border-gray-300 rounded-lg bg-white text-gray-800"
+            style={{ 
+              WebkitTapHighlightColor: 'transparent',
+              outline: 'none'
+            }}
           >
             {answer}
-          </Button>
+          </button>
         ))
       
       case 'boolean':
         return (
-          <>
-            <Button onClick={() => onAnswer(true)} variant="outline">True</Button>
-            <Button onClick={() => onAnswer(false)} variant="outline">False</Button>
-          </>
+          <div className="grid grid-cols-2 gap-4">
+            <button 
+              onClick={() => onAnswer(true)} 
+              className="no-hover-effect w-full p-4 text-center border border-gray-300 rounded-lg bg-white text-gray-800"
+              style={{ 
+                WebkitTapHighlightColor: 'transparent',
+                outline: 'none'
+              }}
+            >
+              True
+            </button>
+            <button 
+              onClick={() => onAnswer(false)} 
+              className="no-hover-effect w-full p-4 text-center border border-gray-300 rounded-lg bg-white text-gray-800"
+              style={{ 
+                WebkitTapHighlightColor: 'transparent',
+                outline: 'none'
+              }}
+            >
+              False
+            </button>
+          </div>
         )
       
       case 'text':

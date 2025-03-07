@@ -99,3 +99,16 @@ body {
     background-color: rgba(139, 92, 246, 0.1); /* Light purple background */
   }
 }
+
+/* Add this to your global CSS */
+.answer-button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.answer-button:focus,
+.answer-button:active,
+.answer-button:hover {
+  outline: none;
+  background-color: transparent;
+  /* Override any other styling that might be applied */
+}
