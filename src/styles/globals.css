@@ -92,3 +92,10 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@media (hover: hover) {
+  /* Only apply hover styles on devices that support hover */
+  .answer-option:hover {
+    background-color: rgba(139, 92, 246, 0.1); /* Light purple background */
+  }
+}

@@ -17,8 +17,7 @@ export default function Question({ question, onAnswer, questionNumber, totalQues
           <Button
             key={index}
             onClick={() => onAnswer(answer)}
-            className="w-full text-left py-3 px-4 rounded-lg transition-colors duration-200 hover:bg-purple-100"
-            variant="outline"
+            className="w-full p-4 mb-2 text-center bg-white border border-gray-300 rounded-lg text-gray-800"
           >
             {answer}
           </Button>
