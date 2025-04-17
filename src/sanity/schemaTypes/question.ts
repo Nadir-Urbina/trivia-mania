@@ -39,7 +39,20 @@ export default defineType({
     }),
     defineField({
       name: 'correctAnswer',
-      title: 'Correct Answer',
+      title: 'Correct Answer for Multiple Choice',
+      type: 'string',
+      description: 'Enter the exact text of the correct answer option',
+      hidden: ({ document }) => document?.type !== 'multipleChoice',
+      validation: rule => rule.custom((value, context) => {
+        if (context.document?.type === 'multipleChoice' && !value) {
+          return 'Multiple choice questions must have a correct answer'
+        }
+        return true
+      })
+    }),
+    defineField({
+      name: 'correctBooleanAnswer',
+      title: 'Correct Answer for True/False',
       type: 'string',
       options: {
         list: [
@@ -47,8 +60,13 @@ export default defineType({
           { title: 'False', value: 'false' }
         ]
       },
-      validation: rule => rule.required(),
-      hidden: ({ parent }) => parent?.type !== 'boolean'
+      validation: rule => rule.custom((value, context) => {
+        if (context.document?.type === 'boolean' && !value) {
+          return 'Boolean questions must have a correct answer'
+        }
+        return true
+      }),
+      hidden: ({ document }) => document?.type !== 'boolean'
     }),
     defineField({
       name: 'acceptableAnswers',

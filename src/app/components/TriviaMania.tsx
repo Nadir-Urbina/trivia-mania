@@ -62,13 +62,20 @@ export default function TriviaMania({ playerData, onGameComplete }: TriviaManiaP
   const validateAnswer = (question: SanityQuestion, answer: string | boolean): boolean => {
     switch (question.type) {
       case 'multipleChoice':
-        return answer === question.correctAnswer
+        const mcQuestion = question as import('@/sanity/types/question').MultipleChoiceQuestion
+        return answer === mcQuestion.correctAnswer
       case 'boolean':
-        return String(answer).toLowerCase() === String(question.correctAnswer).toLowerCase()
+        const boolQuestion = question as import('@/sanity/types/question').BooleanQuestion
+        // Handle boolean questions differently because the stored value might be a string
+        const correctBoolAnswer = typeof boolQuestion.correctAnswer === 'string' 
+          ? boolQuestion.correctAnswer === 'true' 
+          : boolQuestion.correctAnswer
+        return String(answer).toLowerCase() === String(correctBoolAnswer).toLowerCase()
       case 'text':
+        const textQuestion = question as import('@/sanity/types/question').TextQuestion
         const userAnswer = String(answer).toLowerCase().trim()
-        const correctAnswer = question.correctAnswer.toLowerCase()
-        const acceptableAnswers = question.acceptableAnswers?.map(a => a.toLowerCase()) || []
+        const correctAnswer = String(textQuestion.correctAnswer).toLowerCase()
+        const acceptableAnswers = textQuestion.acceptableAnswers?.map(a => a.toLowerCase()) || []
         return userAnswer === correctAnswer || acceptableAnswers.includes(userAnswer)
       default:
         return false
