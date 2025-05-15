@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import TriviaMania from "./TriviaMania"
@@ -8,8 +8,11 @@ import InitialForm from "./InitialForm"
 import { savePlayerData, saveGameResult, PlayerData } from "@/lib/firebaseUtils"
 
 export default function GamePageClient() {
-  const searchParams = useSearchParams()
-  const categoryParam = searchParams.get("categories")
+  // Add this for client-side only
+  const searchParamsHook = useSearchParams();  
+  
+  // Only access searchParams on the client to avoid hydration errors
+  const categoryParam = typeof window !== 'undefined' ? searchParamsHook.get("categories") : null;
   
   // Parse category IDs from URL params
   const categoryIds = categoryParam ? categoryParam.split(",") : undefined
