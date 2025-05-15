@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getFirestore, doc, deleteDoc } from 'firebase/firestore';
-import { app } from '@/lib/firebase';
-
-const db = getFirestore(app);
+import { doc, deleteDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export async function POST(req: NextRequest) {
   try {
