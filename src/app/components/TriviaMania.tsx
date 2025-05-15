@@ -16,7 +16,7 @@ interface TriviaManiaProp {
     companyName: string
     role: string
   }
-  onGameComplete: (score: number, timeInSeconds: number) => void
+  onGameComplete: (score: number, timeInSeconds: number, results: Array<{ question: string; userAnswer: string; correctAnswer: string; isCorrect: boolean }>) => void
   categoryIds?: string[] // Optional array of category IDs to filter questions
 }
 
@@ -30,6 +30,7 @@ export default function TriviaMania({ playerData, onGameComplete, categoryIds }:
   const [isTimerRunning, setIsTimerRunning] = useState(true)
   const [totalTime, setTotalTime] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
+  const [answerResults, setAnswerResults] = useState<Array<{ question: string; userAnswer: string; correctAnswer: string; isCorrect: boolean }>>([])
 
   useEffect(() => {
     async function fetchQuestions() {
@@ -87,14 +88,30 @@ export default function TriviaMania({ playerData, onGameComplete, categoryIds }:
     const currentQuestion = gameQuestions[currentQuestionIndex]
     const isCorrect = validateAnswer(currentQuestion, answer)
     
-    console.log({
-      questionNumber: currentQuestionIndex + 1,
-      question: currentQuestion.question,
-      userAnswer: answer,
-      correctAnswer: currentQuestion.correctAnswer,
-      isCorrect: isCorrect,
-      type: currentQuestion.type
-    })
+    // Prepare answer result
+    let correctAnswer: string
+    switch (currentQuestion.type) {
+      case 'multipleChoice':
+        correctAnswer = (currentQuestion as any).correctAnswer
+        break
+      case 'boolean':
+        correctAnswer = String((currentQuestion as any).correctAnswer)
+        break
+      case 'text':
+        correctAnswer = (currentQuestion as any).correctAnswer
+        break
+      default:
+        correctAnswer = ''
+    }
+    setAnswerResults(prev => [
+      ...prev,
+      {
+        question: currentQuestion.question,
+        userAnswer: String(answer),
+        correctAnswer,
+        isCorrect
+      }
+    ])
 
     if (isCorrect) setScore(score + 1)
 
@@ -103,7 +120,15 @@ export default function TriviaMania({ playerData, onGameComplete, categoryIds }:
     } else {
       setGameOver(true)
       setIsTimerRunning(false)
-      onGameComplete(score + (isCorrect ? 1 : 0), totalTime)
+      onGameComplete(score + (isCorrect ? 1 : 0), totalTime, [
+        ...answerResults,
+        {
+          question: currentQuestion.question,
+          userAnswer: String(answer),
+          correctAnswer,
+          isCorrect
+        }
+      ])
     }
   }
 
@@ -155,6 +180,7 @@ export default function TriviaMania({ playerData, onGameComplete, categoryIds }:
             onRestart={restartGame}
             userData={playerData}
             totalTime={totalTime}
+            results={answerResults}
           />
         )}
       </motion.div>

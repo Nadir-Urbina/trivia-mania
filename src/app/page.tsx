@@ -25,7 +25,7 @@ export default function Home() {
     }
   }
 
-  const handleGameComplete = async (score: number, timeInSeconds: number) => {
+  const handleGameComplete = async (score: number, timeInSeconds: number, results: Array<{ question: string; userAnswer: string; correctAnswer: string; isCorrect: boolean }>) => {
     if (!playerData) return
 
     try {
@@ -36,8 +36,20 @@ export default function Home() {
         timeInSeconds,
         archived: false
       })
+      // Send quiz results email
+      await fetch('/api/send-quiz-results', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: playerData.fullName,
+          email: playerData.email,
+          score,
+          total: results.length,
+          results
+        })
+      })
     } catch (error) {
-      console.error("Error saving game result:", error)
+      console.error("Error saving game result or sending email:", error)
     }
   }
 

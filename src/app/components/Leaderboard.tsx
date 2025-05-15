@@ -65,6 +65,25 @@ export default function Leaderboard({ initialIsDaily = false }) {
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this record? This cannot be undone.')) return;
+    try {
+      const res = await fetch('/api/delete-game-result', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        alert('Failed to delete: ' + (data.error || res.statusText));
+      } else {
+        handleRefresh();
+      }
+    } catch (err) {
+      alert('Error deleting record: ' + (err as Error).message);
+    }
+  };
+
   return (
     <div className="p-6 bg-white rounded-lg shadow-lg">
       <div className="flex justify-between items-center mb-6">
@@ -103,9 +122,18 @@ export default function Leaderboard({ initialIsDaily = false }) {
                   </p>
                 </div>
               </div>
-              <span className="text-primary-accent font-mono">
-                {formatTime(result.timeInSeconds)}
-              </span>
+              <div className="flex items-center gap-4">
+                <span className="text-primary-accent font-mono">
+                  {formatTime(result.timeInSeconds)}
+                </span>
+                <button
+                  onClick={() => handleDelete(result.id)}
+                  className="ml-2 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors text-xs font-semibold"
+                  title="Delete this record"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           ))}
         </div>
