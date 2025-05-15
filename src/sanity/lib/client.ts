@@ -1,6 +1,6 @@
 import { createClient } from 'next-sanity'
 import { apiVersion, dataset, projectId, useCdn } from '../env'
-import { Question, BooleanQuestion, MultipleChoiceQuestion, TextQuestion } from '../types/question'
+import { Question, BooleanQuestion, MultipleChoiceQuestion, TextQuestion, Category } from '../types/question'
 
 export const client = createClient({
   apiVersion,
@@ -9,8 +9,8 @@ export const client = createClient({
   useCdn,
 })
 
-export async function getQuestions() {
-  const query = `*[_type == "question"] {
+export async function getQuestions(categoryIds?: string[]) {
+  let query = `*[_type == "question"] {
     _type,
     question,
     type,
@@ -19,8 +19,34 @@ export async function getQuestions() {
     correctBooleanAnswer,
     acceptableAnswers,
     category,
+    "categories": categories[]-> {
+      _id,
+      title,
+      description
+    },
     difficulty
   }`
+  
+  // Filter by categories if provided
+  if (categoryIds && categoryIds.length > 0) {
+    const categoryFilter = categoryIds.map(id => `references("${id}")`).join(' || ')
+    query = `*[_type == "question" && (${categoryFilter})] {
+      _type,
+      question,
+      type,
+      answers,
+      correctAnswer,
+      correctBooleanAnswer,
+      acceptableAnswers,
+      category,
+      "categories": categories[]-> {
+        _id,
+        title,
+        description
+      },
+      difficulty
+    }`
+  }
   
   const questions = await client.fetch(query)
   
@@ -32,6 +58,16 @@ export async function getQuestions() {
     }
     return q
   })
+}
+
+export async function getCategories() {
+  const query = `*[_type == "category"] {
+    _id,
+    title,
+    description
+  }`
+  
+  return await client.fetch(query)
 }
 
 export function validateAnswer(question: Question, answer: string | boolean): boolean {

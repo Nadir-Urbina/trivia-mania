@@ -1,10 +1,19 @@
 export type QuestionType = 'multipleChoice' | 'boolean' | 'text';
 
+export interface Category {
+  _id: string;
+  title: string;
+  description?: string;
+}
+
 export interface BaseQuestion {
   _type: 'question';
   question: string;
   type: QuestionType;
-  category: string;
+  // Legacy field
+  category?: string;
+  // New field
+  categories?: Category[];
   difficulty: 'Easy' | 'Medium' | 'Hard';
 }
 

@@ -77,9 +77,23 @@ export default defineType({
       hidden: ({ document }) => document?.type !== 'text'
     }),
     defineField({
+      name: 'categories',
+      title: 'Categories',
+      type: 'array',
+      of: [
+        {
+          type: 'reference',
+          to: [{ type: 'category' }]
+        }
+      ],
+      description: 'Assign one or more categories to this question'
+    }),
+    // Keep the old string-based category for backward compatibility
+    defineField({
       name: 'category',
-      title: 'Category',
+      title: 'Legacy Category (deprecated)',
       type: 'string',
+      hidden: true,
       options: {
         list: [
           { title: 'Asphalt Technology', value: 'Asphalt Technology' },

@@ -6,6 +6,7 @@ export interface PlayerData {
   email: string;
   companyName: string;
   role: string;
+  acknowledgeMarketing?: boolean;
 }
 
 export interface GameResult {

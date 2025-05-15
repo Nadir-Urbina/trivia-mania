@@ -1,13 +1,19 @@
 "use client"
 
-import { useState } from "react"
-import Link from 'next/link'
-import TriviaMania from "./components/TriviaMania"
-import InitialForm from "./components/InitialForm"
-import Leaderboard from "./components/Leaderboard"
+import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
+import Link from "next/link"
+import TriviaMania from "../components/TriviaMania"
+import InitialForm from "../components/InitialForm"
 import { savePlayerData, saveGameResult, PlayerData } from "@/lib/firebaseUtils"
 
-export default function Home() {
+export default function GamePage() {
+  const searchParams = useSearchParams()
+  const categoryParam = searchParams.get("categories")
+  
+  // Parse category IDs from URL params
+  const categoryIds = categoryParam ? categoryParam.split(",") : undefined
+  
   const [gameStarted, setGameStarted] = useState(false)
   const [playerData, setPlayerData] = useState<PlayerData | null>(null)
 
@@ -49,9 +55,8 @@ export default function Home() {
             href="/admin"
             className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:opacity-90 transition-colors"
           >
-            Admin Panel
             <svg 
-              className="w-5 h-5 ml-2" 
+              className="w-5 h-5 mr-2" 
               fill="none" 
               stroke="currentColor" 
               viewBox="0 0 24 24"
@@ -60,15 +65,10 @@ export default function Home() {
                 strokeLinecap="round" 
                 strokeLinejoin="round" 
                 strokeWidth={2} 
-                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" 
-              />
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" 
+                d="M15 19l-7-7 7-7" 
               />
             </svg>
+            Back to Admin
           </Link>
           
           <Link 
@@ -91,18 +91,28 @@ export default function Home() {
             </svg>
           </Link>
         </div>
+        
         <div className="flex justify-center">
           {!gameStarted ? (
-            <InitialForm onSubmit={handleStartGame} />
+            <div>
+              <InitialForm onSubmit={handleStartGame} />
+              {categoryIds && categoryIds.length > 0 && (
+                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                  <p className="text-sm text-blue-700">
+                    Playing with {categoryIds.length} selected {categoryIds.length === 1 ? 'category' : 'categories'}.
+                  </p>
+                </div>
+              )}
+            </div>
           ) : (
             <TriviaMania 
               playerData={playerData!} 
               onGameComplete={handleGameComplete}
+              categoryIds={categoryIds}
             />
           )}
         </div>
       </div>
     </main>
   )
-}
-
+} 

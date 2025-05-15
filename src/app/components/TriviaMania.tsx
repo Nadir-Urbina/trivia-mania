@@ -17,11 +17,12 @@ interface TriviaManiaProp {
     role: string
   }
   onGameComplete: (score: number, timeInSeconds: number) => void
+  categoryIds?: string[] // Optional array of category IDs to filter questions
 }
 
 const QUESTIONS_PER_GAME = 7
 
-export default function TriviaMania({ playerData, onGameComplete }: TriviaManiaProp) {
+export default function TriviaMania({ playerData, onGameComplete, categoryIds }: TriviaManiaProp) {
   const [gameQuestions, setGameQuestions] = useState<SanityQuestion[]>([])
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [score, setScore] = useState(0)
@@ -33,7 +34,7 @@ export default function TriviaMania({ playerData, onGameComplete }: TriviaManiaP
   useEffect(() => {
     async function fetchQuestions() {
       try {
-        const allQuestions = await getQuestions()
+        const allQuestions = await getQuestions(categoryIds)
         const shuffled = shuffleArray([...allQuestions])
         setGameQuestions(shuffled.slice(0, QUESTIONS_PER_GAME))
       } catch (error) {
@@ -43,7 +44,7 @@ export default function TriviaMania({ playerData, onGameComplete }: TriviaManiaP
       }
     }
     fetchQuestions()
-  }, [])
+  }, [categoryIds])
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null
@@ -109,7 +110,7 @@ export default function TriviaMania({ playerData, onGameComplete }: TriviaManiaP
   const restartGame = async () => {
     setIsLoading(true)
     try {
-      const allQuestions = await getQuestions()
+      const allQuestions = await getQuestions(categoryIds)
       const shuffled = shuffleArray([...allQuestions])
       setGameQuestions(shuffled.slice(0, QUESTIONS_PER_GAME))
       setCurrentQuestionIndex(0)
