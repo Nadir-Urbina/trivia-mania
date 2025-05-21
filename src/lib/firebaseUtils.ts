@@ -12,6 +12,7 @@ export interface PlayerData {
 export interface GameResult {
   playerName: string;
   companyName: string;
+  email: string;
   score: number;
   timeInSeconds: number;
 }
@@ -40,6 +41,7 @@ export const savePlayerData = async (playerData: PlayerData) => {
 export const saveGameResult = async (data: {
   playerName: string;
   companyName: string;
+  email: string;
   score: number;
   timeInSeconds: number;
   archived?: boolean;
@@ -51,6 +53,7 @@ export const saveGameResult = async (data: {
     const docRef = await addDoc(gameResultRef, {
       playerName: data.playerName,
       companyName: data.companyName,
+      email: data.email,
       score: data.score,
       timeInSeconds: data.timeInSeconds,
       playedAt: serverTimestamp(),
@@ -67,38 +70,74 @@ export const saveGameResult = async (data: {
 
 export const canPlayerPlay = async (email: string): Promise<boolean> => {
   try {
-    const oneHourAgo = new Date();
-    oneHourAgo.setHours(oneHourAgo.getHours() - 1);
+    // Get the start of today (midnight)
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
 
-    const q = query(
+    // First check the players collection
+    const playersQuery = query(
       collection(db, 'players'),
       where('email', '==', email),
-      where('lastPlayedAt', '>', oneHourAgo),
+      where('lastPlayedAt', '>', startOfToday),
       limit(1)
     );
 
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.empty; // If empty, player can play
+    const playersSnapshot = await getDocs(playersQuery);
+    
+    // If found in players collection, player already played today
+    if (!playersSnapshot.empty) {
+      return false;
+    }
+
+    // Also check the gameResults collection
+    const gameResultsQuery = query(
+      collection(db, 'gameResults'),
+      where('email', '==', email),
+      where('playedAt', '>', startOfToday),
+      limit(1)
+    );
+
+    const gameResultsSnapshot = await getDocs(gameResultsQuery);
+    
+    // If found in either collection, player already played today
+    return gameResultsSnapshot.empty;
   } catch (error) {
     console.error('Error checking player status:', error);
     throw error;
   }
 };
 
-export const getLeaderboard = async (daily: boolean = true) => {
+export const getLeaderboard = async (
+  daily: boolean = true, 
+  archiveFilter: 'active' | 'archived' | 'all' = 'active',
+  page: number = 1,
+  pageSize: number = 10
+) => {
   try {
-    console.log('Getting leaderboard, daily mode:', daily);
+    console.log('Getting leaderboard, daily mode:', daily, 'archive filter:', archiveFilter, 'page:', page, 'pageSize:', pageSize);
     
     // Create a reference to the gameResults collection
     const gameResultsRef = collection(db, 'gameResults');
     
-    // Simplify the query to just filter by archived status
-    const q = query(
-      gameResultsRef,
-      where('archived', '==', false),
-      orderBy('score', 'desc'),
-      limit(20)
-    );
+    // Base query without archive filtering
+    let q;
+    
+    // Apply different query based on archive filter
+    if (archiveFilter === 'all') {
+      // Don't filter by archive status
+      q = query(
+        gameResultsRef,
+        orderBy('score', 'desc')
+      );
+    } else {
+      // Filter by specific archive status
+      const isArchived = archiveFilter === 'archived';
+      q = query(
+        gameResultsRef,
+        where('archived', '==', isArchived),
+        orderBy('score', 'desc')
+      );
+    }
     
     console.log('Executing Firestore query...');
     const querySnapshot = await getDocs(q);
@@ -136,10 +175,27 @@ export const getLeaderboard = async (daily: boolean = true) => {
       return a.timeInSeconds - b.timeInSeconds;
     });
     
-    return results;
+    // Total count before pagination
+    const totalCount = results.length;
+    
+    // Apply pagination in memory
+    const startIndex = (page - 1) * pageSize;
+    const paginatedResults = results.slice(startIndex, startIndex + pageSize);
+    
+    return {
+      results: paginatedResults,
+      totalCount,
+      totalPages: Math.ceil(totalCount / pageSize),
+      currentPage: page
+    };
   } catch (error) {
     console.error('Error fetching leaderboard:', error);
-    return [];
+    return {
+      results: [],
+      totalCount: 0,
+      totalPages: 0,
+      currentPage: page
+    };
   }
 };
 

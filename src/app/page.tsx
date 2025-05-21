@@ -32,6 +32,7 @@ export default function Home() {
       await saveGameResult({
         playerName: playerData.fullName,
         companyName: playerData.companyName,
+        email: playerData.email,
         score,
         timeInSeconds,
         archived: false

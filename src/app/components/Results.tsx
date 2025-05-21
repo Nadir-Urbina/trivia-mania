@@ -84,12 +84,11 @@ export default function Results({ score, totalQuestions, onRestart, userData, to
 
       <p className="text-xl text-primary mb-8">Keep practicing!</p>
       
-      <button
-        onClick={onRestart}
-        className="bg-primary-accent text-white px-8 py-3 rounded-lg font-semibold mb-4 hover:opacity-90 transition-opacity"
-      >
-        Play Again
-      </button>
+      <div className="mb-6 bg-yellow-50 border border-yellow-200 p-4 rounded-lg text-center">
+        <p className="text-yellow-700 font-medium mb-2">Thank you for playing!</p>
+        <p className="text-yellow-600">Your score has been recorded on our leaderboard.</p>
+        <p className="text-yellow-600">Please come back tomorrow for another round of fun!</p>
+      </div>
       
       <div>
         <Link 

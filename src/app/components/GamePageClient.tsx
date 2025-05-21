@@ -41,6 +41,7 @@ export default function GamePageClient() {
       await saveGameResult({
         playerName: playerData.fullName,
         companyName: playerData.companyName,
+        email: playerData.email,
         score,
         timeInSeconds,
         archived: false
